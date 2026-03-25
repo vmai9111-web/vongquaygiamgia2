@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng Quay Giảm Giá</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at center, #2b2b36 0%, #0d0d12 100%);
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative; /* Giữ vị trí cho nút ẩn */
+        }
+
+        /* --- Hidden Red Button --- */
+        #hidden-red-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 30px;
+            height: 30px;
+            background-color: #ff0000;
+            border-radius: 50%;
+            border: none;
+            display: none; /* Ẩn nút theo yêu cầu */
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        /* --- Start Screen --- */
+        #start-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            z-index: 30;
+        }
+
+        #start-screen h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+        }
+
+        .start-btn {
+            padding: 20px 50px;
+            font-size: 24px;
+            font-weight: bold;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: transform 0.2s, filter 0.2s;
+        }
+
+        .start-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Metallic Patterns */
+        .metal-silver {
+            background: repeating-linear-gradient(135deg, 
+                #cccccc 0%, #999999 10%, #e6e6e6 20%, 
+                #cccccc 30%, #aaaaaa 40%, #ffffff 50%,
+                #999999 60%, #e0e0e0 70%, #aaaaaa 80%,
+                #cccccc 90%, #b3b3b3 100%);
+            box-shadow: 0 5px 20px rgba(153, 153, 153, 0.6), inset 0 0 10px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .metal-gold {
+            background: repeating-linear-gradient(135deg,
+                #bf9b30 0%, #e6cc80 10%, #ffc107 20%,
+                #d9a06f 30%, #ffe066 40%, #ffcc00 50%,
+                #b38b1a 60%, #fff8cc 70%, #e0ac1a 80%,
+                #bf9b30 90%, #cca300 100%);
+            box-shadow: 0 5px 20px rgba(245, 158, 11, 0.6), inset 0 0 10px rgba(0,0,0,0.3);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- Wheel View --- */
+        #wheel-view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            z-index: 20;
+        }
+
+        button {
+            padding: 15px 35px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: transform 0.2s, filter 0.2s;
+        }
+
+        button:disabled {
+            filter: grayscale(1);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Pointer at top center */
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ff4444; 
+            z-index: 15;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 10px solid;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+            transition: transform 7s cubic-bezier(0.2, 0.8, 0.1, 1);
+        }
+
+        /* Specific Metallic Looks & Glows for Wheel */
+        .wheel.normal {
+            border-color: #e0e0e0;
+            box-shadow: 0 0 40px 15px rgba(200, 200, 200, 0.7);
+        }
+
+        .wheel.vip {
+            border-color: #fffacd;
+            box-shadow: 0 0 50px 20px rgba(255, 215, 0, 0.8);
+        }
+
+        /* --- Text inside segments --- */
+        .segment {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            transform-origin: 50% 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 60px; /* Đẩy chữ ra khỏi tâm vòng xoay */
+            color: #000;
+            font-weight: 900;
+            font-size: 20px;
+            -webkit-text-stroke: 1px #fff;
+            text-transform: uppercase;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .segment span {
+            max-width: 110px;
+            line-height: 1.2;
+            display: inline-block;
+        }
+
+        /* --- Result --- */
+        .result-box {
+            position: absolute;
+            width: 420px;
+            height: 260px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            z-index: 25;
+            text-align: center;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .result-box.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .result-type {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .result-text {
+            font-size: 60px;
+            font-weight: 900;
+            margin: 0;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Result Halo Effects */
+        .prize-1k {
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            box-shadow: 0 0 50px 20px rgba(0, 198, 255, 0.8);
+        }
+
+        .prize-2k {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            box-shadow: 0 0 50px 20px rgba(56, 239, 125, 0.8);
+        }
+
+        .prize-3k {
+            background: linear-gradient(135deg, #b92b27, #1565C0);
+            box-shadow: 0 0 50px 20px rgba(185, 43, 39, 0.8);
+        }
+
+        .prize-super {
+            background: linear-gradient(135deg, #fc00ff, #00dbde);
+            animation: superGlow 1.5s infinite alternate;
+        }
+
+        @keyframes superGlow {
+            0% { box-shadow: 0 0 30px 10px rgba(252, 0, 255, 0.8); }
+            50% { box-shadow: 0 0 60px 25px rgba(0, 219, 222, 0.9); }
+            100% { box-shadow: 0 0 30px 10px rgba(255, 215, 0, 1); }
+        }
+    </style>
+</head>
+<body>
+
+    <button id="hidden-red-btn"></button>
+
+    <div id="start-screen">
+        <h2>CHỌN LOẠI VÒNG QUAY</h2>
+        <button class="start-btn metal-silver" onclick="initWheel('normal')">VÒNG BẠC (THƯỜNG)</button>
+        <button class="start-btn metal-gold" onclick="initWheel('vip')">VÒNG VÀNG (VIP)</button>
+    </div>
+
+    <div id="wheel-view">
+        <h1 id="wheel-title">VÒNG QUAY</h1>
+
+        <div class="controls">
+            <button id="btnNormal" class="metal-silver" onclick="spin('normal')">Quay Thường</button>
+            <button id="btnVip" class="metal-gold" onclick="spin('vip')">Quay VIP</button>
+        </div>
+
+        <div class="wheel-container">
+            <div class="pointer"></div>
+            <div id="wheel" class="wheel"></div>
+            
+            <div id="result-overlay" class="result-box">
+                <div id="result-type" class="result-type"></div>
+                <div id="result-text" class="result-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isSpinning = false;
+        let currentRotation = 0;
+        let selectedType = '';
+
+        const wheelsData = {
+            'normal': {
+                segments: 3,
+                prizes: ['GIẢM 1K', 'GIẢM 2K', 'GIẢM 3K'],
+                // Đã sử dụng standard conic-gradient thay vì repeating-conic-gradient để sửa lỗi warning
+                gradient: 'conic-gradient(from 0deg, #f0f0f0 0deg 120deg, #c4c4c4 120deg 240deg, #e0e0e0 240deg 360deg)',
+                cssClass: 'normal',
+                title: 'VÒNG BẠC (THƯỜNG)'
+            },
+            'vip': {
+                segments: 5,
+                prizes: ['GIẢM 1K', 'GIẢM 2K', 'GIẢM 3K', 'BỐC THĂM\nSIÊU GIẢM', 'GIẢM 5K'],
+                gradient: 'conic-gradient(from 0deg, #ffd700 0deg 72deg, #ff9900 72deg 144deg, #ffc107 144deg 216deg, #ff8c00 216deg 288deg, #ffeb3b 288deg 360deg)',
+                cssClass: 'vip',
+                title: 'VÒNG VÀNG (VIP)'
+            }
+        };
+
+        function initWheel(type) {
+            selectedType = type;
+            const data = wheelsData[type];
+            const wheel = document.getElementById('wheel');
+            
+            // Setup màn hình
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('wheel-view').style.display = 'flex';
+            document.getElementById('wheel-title').innerText = data.title;
+            
+            document.getElementById('btnNormal').style.display = type === 'normal' ? 'block' : 'none';
+            document.getElementById('btnVip').style.display = type === 'vip' ? 'block' : 'none';
+            
+            wheel.className = `wheel ${data.cssClass}`;
+            wheel.style.background = data.gradient;
+            wheel.innerHTML = ''; 
+
+            const segmentSize = 360 / data.segments;
+
+            for (let i = 0; i < data.segments; i++) {
+                const segment = document.createElement('div');
+                segment.className = `segment`;
+                
+                // Xoay ô chữ căn vào chính giữa của phần mảng màu tương ứng
+                const rotation = (i * segmentSize) + (segmentSize / 2);
+                segment.style.transform = `rotate(${rotation}deg)`;
+                
+                const textSpan = document.createElement('span');
+                textSpan.innerText = data.prizes[i];
+                segment.appendChild(textSpan);
+                
+                wheel.appendChild(segment);
+            }
+        }
+
+        function spin(type) {
+            if (isSpinning) return;
+            isSpinning = true;
+
+            const wheel = document.getElementById('wheel');
+            const overlay = document.getElementById('result-overlay');
+            const btn = type === 'normal' ? document.getElementById('btnNormal') : document.getElementById('btnVip');
+
+            btn.disabled = true;
+            overlay.className = 'result-box'; 
+
+            let rand = Math.random();
+            let resultText = '';
+            let prizeClass = '';
+            let winningSegmentIndex = 0;
+
+            // Xử lý tỉ lệ theo yêu cầu
+            if (type === 'normal') {
+                if (rand < 0.70) { 
+                    winningSegmentIndex = 0; // 70% GIẢM 1K
+                    resultText = 'GIẢM 1K';
+                    prizeClass = 'prize-1k';
+                } else { 
+                    winningSegmentIndex = 1; // 30% GIẢM 2K
+                    resultText = 'GIẢM 2K';
+                    prizeClass = 'prize-2k';
+                }
+                // GIẢM 3K (index 2) không bao giờ ra (0%)
+            } else { 
+                if (rand < 0.30) { 
+                    winningSegmentIndex = 0; // 30% GIẢM 1K
+                    resultText = 'GIẢM 1K';
+                    prizeClass = 'prize-1k';
+                } else if (rand < 0.90) { 
+                    winningSegmentIndex = 1; // 60% GIẢM 2K (30% + 60% = 90%)
+                    resultText = 'GIẢM 2K';
+                    prizeClass = 'prize-2k';
+                } else if (rand < 0.96) { 
+                    winningSegmentIndex = 2; // 6% GIẢM 3K (90% + 6% = 96%)
+                    resultText = 'GIẢM 3K';
+                    prizeClass = 'prize-3k';
+                } else { 
+                    winningSegmentIndex = 3; // 4% BỐC THĂM (96% + 4% = 100%)
+                    resultText = 'BỐC THĂM SIÊU GIẢM GIÁ';
+                    prizeClass = 'prize-super';
+                }
+                // GIẢM 5K (index 4) không bao giờ ra (0%)
+            }
+
+            // Tính toán góc chính xác để mũi tên chỉ đúng vào giữa ô kết quả
+            const numSegments = wheelsData[type].segments;
+            const segmentSize = 360 / numSegments;
+            
+            // Góc ở giữa của ô trúng thưởng
+            const targetCenterAngle = (winningSegmentIndex * segmentSize) + (segmentSize / 2);
+            
+            // Lệch ngẫu nhiên một chút nhưng vẫn nằm gọn trong ô (trừ biên 10%)
+            const margin = segmentSize * 0.1;
+            const randomOffset = (Math.random() * (segmentSize - 2 * margin)) + margin - (segmentSize / 2);
+            
+            // Điểm trên vòng quay cần chỉ thẳng lên (top/0 độ)
+            const landingAngle = targetCenterAngle + randomOffset;
+            
+            // Góc cần quay (ngược lại với landingAngle để đưa nó lên 0)
+            const requiredRotation = 360 - landingAngle;
+            
+            const extraSpins = 10; // Quay 10 vòng cho đẹp
+            const nextStop = requiredRotation + (360 * extraSpins);
+            
+            const currentMod = currentRotation % 360;
+            let addDegrees = nextStop - currentMod;
+            if (addDegrees < 360 * 5) { addDegrees += 360; } 
+            
+            currentRotation += addDegrees;
+            
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+            // Hiện kết quả
+            setTimeout(() => {
+                document.getElementById('result-type').innerText = type === 'normal' ? 'VÒNG BẠC (THƯỜNG)' : 'VÒNG VÀNG (VIP)';
+                document.getElementById('result-text').innerText = resultText;
+                
+                overlay.className = `result-box show ${prizeClass}`;
+                
+                isSpinning = false;
+                btn.disabled = false;
+            }, 7000); 
+        }
+    </script>
+</body>
+</html>
